@@ -105,6 +105,10 @@ load_dotenv()
 
 deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 
+- Add chat utility in `src/common/chat_util.py` providing:
+  - `ChatSession` for stateful conversations with history and optional system prompt
+  - `ChatUtil.quick_chat(...)` for one-shot prompts using the factory
+
 has_sp = all(os.getenv(v) for v in ["AZURE_CLIENT_ID", "AZURE_TENANT_ID", "AZURE_CLIENT_SECRET"])
 if has_sp:
     token_provider = AzureIdentityUtil.from_env().get_token_provider()
@@ -112,9 +116,37 @@ if has_sp:
 else:
     factory = AzureOpenAIClientFactory.from_env_with_api_key()
 
-client = factory.create_client()
-resp = client.responses.create(model=deployment, input="Write a haiku about cloud identity.")
-print(getattr(resp, "output_text", str(resp)))
+# One-shot
+text = ChatUtil(factory).quick_chat(os.getenv("AZURE_OPENAI_DEPLOYMENT"), "Hello!")
+print(text)
+
+# Stateful session
+session = ChatSession(factory, deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"), system_prompt="You are helpful.")
+print(session.send("Hello"))
+print(session.send("Give me a short tip about Azure."))
+```
+
+```python
+from src.common.chat_util import ChatSession, ChatUtil
+from src.common.azure_openai_factory import AzureOpenAIClientFactory
+from src.common.azure_identity import AzureIdentityUtil
+
+# Choose auth method (Service Principal preferred if available)
+has_sp = all(os.getenv(v) for v in ["AZURE_CLIENT_ID", "AZURE_TENANT_ID", "AZURE_CLIENT_SECRET"])
+if has_sp:
+    token_provider = AzureIdentityUtil.from_env().get_token_provider()
+    factory = AzureOpenAIClientFactory.from_env_with_identity(token_provider)
+else:
+    factory = AzureOpenAIClientFactory.from_env_with_api_key()
+
+# One-shot
+text = ChatUtil(factory).quick_chat(os.getenv("AZURE_OPENAI_DEPLOYMENT"), "Hello!")
+print(text)
+
+# Stateful session
+session = ChatSession(factory, deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"), system_prompt="You are helpful.")
+print(session.send("Hello"))
+print(session.send("Give me a short tip about Azure."))
 ```
 
 ## Design Notes
