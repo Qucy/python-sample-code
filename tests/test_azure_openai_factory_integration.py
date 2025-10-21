@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from src.utils.azure_identity import AzureIdentityUtil
-from src.utils.azure_openai_factory import AzureOpenAIClientFactory
+from src.common.azure_identity import AzureIdentityUtil
+from src.common.azure_openai_factory import AzureOpenAIClientFactory
 
 IDENTITY_ENV = [
     "AZURE_CLIENT_ID",

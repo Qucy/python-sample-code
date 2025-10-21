@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from src.utils.azure_identity import AzureIdentityUtil
-from src.utils.azure_openai_factory import AzureOpenAIClientFactory
+from src.common.azure_identity import AzureIdentityUtil
+from src.common.azure_openai_factory import AzureOpenAIClientFactory
 
 
 def main():

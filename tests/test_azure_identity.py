@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from azure.identity import ClientSecretCredential
-from src.utils.azure_identity import AzureIdentityUtil
+from src.common.azure_identity import AzureIdentityUtil
 
 
 class TestAzureIdentityUtil(unittest.TestCase):

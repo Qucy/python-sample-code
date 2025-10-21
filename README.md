@@ -9,7 +9,7 @@ Two small utility classes to streamline connecting to Azure OpenAI:
 ```
 python-sample-code/
 ├─ src/
-│  └─ utils/
+│  └─ common/
 │     ├─ __init__.py
 │     ├─ azure_identity.py
 │     └─ azure_openai_factory.py
@@ -70,8 +70,8 @@ Notes:
 ```python
 import os
 from dotenv import load_dotenv
-from src.utils.azure_identity import AzureIdentityUtil
-from src.utils.azure_openai_factory import AzureOpenAIClientFactory
+from src.common.azure_identity import AzureIdentityUtil
+from src.common.azure_openai_factory import AzureOpenAIClientFactory
 
 load_dotenv()
 
@@ -98,8 +98,8 @@ print(response.choices[0].message.content)
 ```python
 import os
 from dotenv import load_dotenv
-from src.utils.azure_identity import AzureIdentityUtil
-from src.utils.azure_openai_factory import AzureOpenAIClientFactory
+from src.common.azure_identity import AzureIdentityUtil
+from src.common.azure_openai_factory import AzureOpenAIClientFactory
 
 load_dotenv()
 

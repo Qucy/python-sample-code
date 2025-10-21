@@ -22,10 +22,10 @@ class AzureOpenAIClientFactory:
     """Create a configured AzureOpenAI client.
 
     Example (AAD auth):
-        from src.utils.azure_identity import AzureIdentityUtil
-        token_provider = AzureIdentityUtil.from_env().get_token_provider()
-        factory = AzureOpenAIClientFactory.from_env_with_identity(token_provider)
-        client = factory.create_client()
+        from src.common.azure_identity import AzureIdentityUtil
+         token_provider = AzureIdentityUtil.from_env().get_token_provider()
+         factory = AzureOpenAIClientFactory.from_env_with_identity(token_provider)
+         client = factory.create_client()
 
     Example (API key auth):
         factory = AzureOpenAIClientFactory.from_env_with_api_key()
