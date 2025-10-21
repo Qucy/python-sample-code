@@ -16,6 +16,7 @@ import os
 from typing import Optional
 
 from openai import AzureOpenAI
+import warnings
 
 
 class AzureOpenAIClientFactory:
@@ -92,7 +93,11 @@ class AzureOpenAIClientFactory:
         return cls(endpoint=ep, api_version=ver, api_key=key)
 
     def quick_chat(self, deployment: str, user_message: str) -> str:
-        """Simple helper using Chat Completions (model == deployment name in Azure)."""
+        """Deprecated: Use ChatUtil.quick_chat(...) or ChatSession."""
+        warnings.warn(
+            "AzureOpenAIClientFactory.quick_chat is deprecated; use ChatUtil.quick_chat or ChatSession.",
+            DeprecationWarning,
+        )
         client = self.create_client()
         resp = client.chat.completions.create(
             model=deployment,
@@ -102,13 +107,15 @@ class AzureOpenAIClientFactory:
         return resp.choices[0].message.content
 
     def quick_response(self, model: str, input_text: str) -> str:
-        """Simple helper using the Responses API (model == deployment name in Azure)."""
+        """Deprecated: Prefer ChatUtil/ChatSession or call client.responses.create directly."""
+        warnings.warn(
+            "AzureOpenAIClientFactory.quick_response is deprecated; prefer ChatUtil/ChatSession or client.responses.create.",
+            DeprecationWarning,
+        )
         client = self.create_client()
         resp = client.responses.create(model=model, input=input_text)
-        # Prefer the convenience property if present in current SDK
         if hasattr(resp, "output_text"):
             return resp.output_text
-        # Fallback: try to assemble text from structured output
         try:
             if hasattr(resp, "output") and resp.output:
                 content = resp.output[0].content if hasattr(resp.output[0], "content") else None

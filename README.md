@@ -116,6 +116,13 @@ if has_sp:
 else:
     factory = AzureOpenAIClientFactory.from_env_with_api_key()
 
+## Deprecations
+
+- `AzureOpenAIClientFactory.quick_chat(...)` and `quick_response(...)` are deprecated.
+  - Prefer `src.common.chat_util.ChatUtil.quick_chat(...)` for one-shot calls.
+  - Prefer `src.common.chat_util.ChatSession` for stateful conversations with history.
+  - For advanced flows, use `client.chat.completions.create(...)` or `client.responses.create(...)` directly from the factory-built client.
+
 # One-shot
 text = ChatUtil(factory).quick_chat(os.getenv("AZURE_OPENAI_DEPLOYMENT"), "Hello!")
 print(text)
