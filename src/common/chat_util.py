@@ -84,6 +84,35 @@ class ChatUtil:
     def __init__(self, client_factory):
         self.client_factory = client_factory
 
+    @staticmethod
+    def parse_json_text(text: str):
+        """
+        Parse a model output string into a JSON object.
+        Handles common cases like fenced code blocks and leading/trailing prose.
+        Raises ValueError if parsing fails.
+        """
+        if text is None:
+            raise ValueError("Cannot parse JSON from None text")
+        s = text.strip()
+        # Extract fenced code block content if present
+        m = re.search(r"```(?:json)?\s*(.*?)```", s, re.DOTALL | re.IGNORECASE)
+        if m:
+            s = m.group(1).strip()
+        # Attempt direct parse first
+        try:
+            return json.loads(s)
+        except Exception:
+            # Fallback: find first '{' and last '}' and attempt to parse substring
+            start = s.find("{")
+            end = s.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                candidate = s[start : end + 1]
+                try:
+                    return json.loads(candidate)
+                except Exception as inner:
+                    raise ValueError(f"Failed to parse JSON text: {inner}")
+            raise ValueError("Failed to parse JSON text: no JSON object found")
+
     def quick_chat(
         self,
         deployment: str,
@@ -99,3 +128,22 @@ class ChatUtil:
             temperature=temperature,
         )
         return session.send(user_message, response_format=response_format)
+
+    def quick_chat_json(
+        self,
+        deployment: str,
+        user_message: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 1.0,
+    ):
+        """
+        Convenience wrapper: enforce JSON mode and return a parsed object.
+        """
+        text = self.quick_chat(
+            deployment=deployment,
+            user_message=user_message,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            response_format={"type": "json_object"},
+        )
+        return ChatUtil.parse_json_text(text)

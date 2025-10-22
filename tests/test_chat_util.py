@@ -84,6 +84,28 @@ class TestChatUtil(unittest.TestCase):
         with self.assertRaises(ValueError):
             ChatSession(factory, deployment="", system_prompt=None)
 
+    def test_parse_json_text_direct(self):
+        data = ChatUtil.parse_json_text('{"a": 1, "b": "x"}')
+        self.assertIsInstance(data, dict)
+        self.assertEqual(data["a"], 1)
+        self.assertEqual(data["b"], "x")
+
+    def test_parse_json_text_fenced(self):
+        s = """
+        ```json
+        {"topic": "Azure", "summary": "Cloud platform by Microsoft."}
+        ```
+        """
+        data = ChatUtil.parse_json_text(s)
+        self.assertIn("topic", data)
+        self.assertIn("summary", data)
+
+    def test_parse_json_text_with_prose(self):
+        s = "Here is your result: {\"k\": 2, \"v\": [1,2,3]} Enjoy!"
+        data = ChatUtil.parse_json_text(s)
+        self.assertEqual(data["k"], 2)
+        self.assertEqual(data["v"], [1, 2, 3])
+
 
 if __name__ == "__main__":
     unittest.main()
