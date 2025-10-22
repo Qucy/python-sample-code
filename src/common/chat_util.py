@@ -42,16 +42,21 @@ class ChatSession:
         if system_prompt:
             self.messages.append({"role": "system", "content": system_prompt})
 
-    def send(self, user_message: str) -> str:
+    def send(self, user_message: str, response_format: Optional[Dict] = None) -> str:
         """
         Add a user message, call Azure OpenAI, append the assistant reply, and return text.
+        Optionally enforce JSON mode by passing response_format={"type": "json_object"}.
         """
         self.messages.append({"role": "user", "content": user_message})
         client = self.client_factory.create_client()
+        kwargs = {}
+        if response_format is not None:
+            kwargs["response_format"] = response_format
         resp = client.chat.completions.create(
             model=self.deployment,
             messages=self.messages,
             temperature=self.temperature,
+            **kwargs,
         )
         text = resp.choices[0].message.content
         self.messages.append({"role": "assistant", "content": text})
@@ -85,6 +90,7 @@ class ChatUtil:
         user_message: str,
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
+        response_format: Optional[Dict] = None,
     ) -> str:
         session = ChatSession(
             client_factory=self.client_factory,
@@ -92,43 +98,4 @@ class ChatUtil:
             system_prompt=system_prompt,
             temperature=temperature,
         )
-        return session.send(user_message)
-
-    def batch_chat(
-        self,
-        deployment: str,
-        prompts: List[str],
-        system_prompt: Optional[str] = None,
-        temperature: float = 0.7,
-        max_workers: int = 5,
-    ) -> List[str]:
-        """
-        Send multiple independent prompts concurrently and return replies ordered to match inputs.
-
-        Notes:
-        - This uses client-side concurrency to emulate a batch request and reduce wall-clock time.
-        - Azure/OpenAI offer a server-side Batch API that is asynchronous and preview-only in Azure; this helper
-          keeps things simple and compatible with GA chat completions.
-        """
-        if not deployment:
-            raise ValueError("deployment (model) name is required for batch_chat.")
-        if not prompts:
-            return []
-
-        from concurrent.futures import ThreadPoolExecutor
-
-        def _call(prompt: str) -> str:
-            session = ChatSession(
-                client_factory=self.client_factory,
-                deployment=deployment,
-                system_prompt=system_prompt,
-                temperature=temperature,
-            )
-            return session.send(prompt)
-
-        results: List[str] = []
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(_call, p) for p in prompts]
-            for fut in futures:
-                results.append(fut.result())
-        return results
+        return session.send(user_message, response_format=response_format)
