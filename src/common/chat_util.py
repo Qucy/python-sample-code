@@ -93,3 +93,42 @@ class ChatUtil:
             temperature=temperature,
         )
         return session.send(user_message)
+
+    def batch_chat(
+        self,
+        deployment: str,
+        prompts: List[str],
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.7,
+        max_workers: int = 5,
+    ) -> List[str]:
+        """
+        Send multiple independent prompts concurrently and return replies ordered to match inputs.
+
+        Notes:
+        - This uses client-side concurrency to emulate a batch request and reduce wall-clock time.
+        - Azure/OpenAI offer a server-side Batch API that is asynchronous and preview-only in Azure; this helper
+          keeps things simple and compatible with GA chat completions.
+        """
+        if not deployment:
+            raise ValueError("deployment (model) name is required for batch_chat.")
+        if not prompts:
+            return []
+
+        from concurrent.futures import ThreadPoolExecutor
+
+        def _call(prompt: str) -> str:
+            session = ChatSession(
+                client_factory=self.client_factory,
+                deployment=deployment,
+                system_prompt=system_prompt,
+                temperature=temperature,
+            )
+            return session.send(prompt)
+
+        results: List[str] = []
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(_call, p) for p in prompts]
+            for fut in futures:
+                results.append(fut.result())
+        return results

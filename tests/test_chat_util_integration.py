@@ -95,6 +95,27 @@ class TestChatUtilIntegration(unittest.TestCase):
         self.assertIsInstance(reply, str)
         self.assertTrue(len(reply) > 0)
 
+    def test_batch_chat_with_identity(self):
+        missing = _missing_env(COMMON_ENV + IDENTITY_ENV)
+        if missing:
+            self.skipTest("Missing env vars: " + ", ".join(missing))
+
+        token_provider = AzureIdentityUtil.from_env().get_token_provider()
+        factory = AzureOpenAIClientFactory.from_env_with_identity(token_provider)
+        deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
+
+        prompts = [
+            "Hello from batch one",
+            "Give a short fact about Azure",
+            "Say goodbye politely",
+        ]
+        replies = ChatUtil(factory).batch_chat(deployment, prompts, system_prompt="Be concise.")
+        self.assertEqual(len(replies), len(prompts))
+        for i, r in enumerate(replies):
+            print(f"Batch reply {i}:", r)
+            self.assertIsInstance(r, str)
+            self.assertTrue(len(r) > 0)
+
 
 if __name__ == "__main__":
     unittest.main()

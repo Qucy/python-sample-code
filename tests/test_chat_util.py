@@ -84,6 +84,16 @@ class TestChatUtil(unittest.TestCase):
         with self.assertRaises(ValueError):
             ChatSession(factory, deployment="", system_prompt=None)
 
+    def test_batch_chat_stateless(self):
+        factory = FakeFactory()
+        util = ChatUtil(factory)
+        prompts = ["Hello", "How are you?", "Bye"]
+        replies = util.batch_chat("demo", prompts)
+        self.assertEqual(len(replies), len(prompts))
+        for i, r in enumerate(replies):
+            self.assertTrue(r.startswith("echo: "))
+            self.assertIn(prompts[i], r)
+
 
 if __name__ == "__main__":
     unittest.main()
