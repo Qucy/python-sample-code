@@ -102,7 +102,7 @@ class AzureOpenAIClientFactory:
         resp = client.chat.completions.create(
             model=deployment,
             messages=[{"role": "user", "content": user_message}],
-            temperature=0.7,
+            temperature=1.0,
         )
         return resp.choices[0].message.content
 

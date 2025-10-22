@@ -30,7 +30,7 @@ class ChatSession:
         client_factory,
         deployment: str,
         system_prompt: Optional[str] = None,
-        temperature: float = 0.7,
+        temperature: float = 1.0,
     ):
         if not deployment:
             raise ValueError("deployment (model) name is required for ChatSession.")
@@ -89,7 +89,7 @@ class ChatUtil:
         deployment: str,
         user_message: str,
         system_prompt: Optional[str] = None,
-        temperature: float = 0.7,
+        temperature: float = 1.0,
         response_format: Optional[Dict] = None,
     ) -> str:
         session = ChatSession(
