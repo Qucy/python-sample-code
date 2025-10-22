@@ -4,6 +4,7 @@ import unittest
 from src.common.chat_util import ChatSession, ChatUtil
 from src.common.azure_identity import AzureIdentityUtil
 from src.common.azure_openai_factory import AzureOpenAIClientFactory
+import json
 
 COMMON_ENV = [
     "AZURE_OPENAI_ENDPOINT",
@@ -46,6 +47,35 @@ class TestChatUtilIntegration(unittest.TestCase):
 
         # Expect at least system + 2 user + 2 assistant messages
         self.assertTrue(len(session.history()) >= 5)
+
+    def test_quick_chat_json_mode_with_identity(self):
+        missing = _missing_env(COMMON_ENV + IDENTITY_ENV)
+        if missing:
+            self.skipTest("Missing env vars: " + ", ".join(missing))
+
+        token_provider = AzureIdentityUtil.from_env().get_token_provider()
+        factory = AzureOpenAIClientFactory.from_env_with_identity(token_provider)
+        deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
+
+        try:
+            text = ChatUtil(factory).quick_chat(
+                deployment,
+                "Return a JSON with fields: topic (string), summary (string). Topic: Azure OpenAI.",
+                system_prompt="You ONLY output JSON objects with fields: topic, summary.",
+                response_format={"type": "json_object"},
+                temperature=0,
+            )
+        except Exception as e:
+            # Some API versions/resources may not support response_format for chat completions
+            self.skipTest(f"JSON mode not available or call failed: {e}")
+            return
+
+        print("ChatUtil.quick_chat JSON mode reply:", text)
+        # Verify the model output is valid JSON and contains expected keys
+        obj = json.loads(text)
+        self.assertIsInstance(obj, dict)
+        self.assertIn("topic", obj)
+        self.assertIn("summary", obj)
 
     def test_quick_chat_with_identity(self):
         missing = _missing_env(COMMON_ENV + IDENTITY_ENV)
